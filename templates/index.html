@@ -8,7 +8,7 @@
 
 <ul class="lista-sesiones">
   {% for s in sesiones %}
-  <li class="tarjeta {% if s.completa %}tarjeta-completa{% endif %}">
+  <li class="tarjeta {% if s.completa or not s.abierta %}tarjeta-completa{% endif %}">
     <div>
       <h2>{{ s.titulo }}</h2>
       <p class="meta">{{ s.fecha_hora | fecha }}{% if s.lugar %} · {{ s.lugar }}{% endif %}</p>
@@ -17,6 +17,8 @@
     <div class="acciones">
       {% if s.completa %}
         <span class="etiqueta etiqueta-llena">Completo</span>
+      {% elif not s.abierta %}
+        <span class="etiqueta etiqueta-cerrada">Reservas cerradas</span>
       {% else %}
         <span class="etiqueta">{{ s.libres }} de {{ s.plazas }} libres</span>
         <a class="boton" href="{{ url_for('reservar', sesion_id=s.id) }}">Reservar</a>

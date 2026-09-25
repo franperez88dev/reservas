@@ -22,5 +22,14 @@
     {% endwith %}
     {% block contenido %}{% endblock %}
   </main>
+
+  {% if contacto_telefono or contacto_email %}
+  <footer class="pie">
+    ¿Dudas o cancelaciones?
+    {% if contacto_telefono %}<a href="tel:{{ contacto_telefono | replace(' ', '') }}">{{ contacto_telefono }}</a>{% endif %}
+    {% if contacto_telefono and contacto_email %} · {% endif %}
+    {% if contacto_email %}<a href="mailto:{{ contacto_email }}">{{ contacto_email }}</a>{% endif %}
+  </footer>
+  {% endif %}
 </body>
 </html>

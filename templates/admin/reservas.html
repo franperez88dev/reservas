@@ -44,5 +44,11 @@
   </div>
 {% endif %}
 
-{# TODO (parte 3): botón "Cancelar" en cada fila #}
+<form class="zona-peligro" method="post" action="{{ url_for('borrar_sesion', sesion_id=sesion.id) }}"
+      onsubmit="return confirm('¿Seguro que quieres borrar esta sesión?{% if reservas and not sesion.pasada %} Se enviará un email de cancelación a {{ reservas | length }} reserva(s).{% endif %}');">
+  <button class="boton boton-peligro" type="submit">Borrar sesión</button>
+  {% if reservas and not sesion.pasada %}
+    <span class="meta">Se avisará por email a las {{ reservas | length }} reservas.</span>
+  {% endif %}
+</form>
 {% endblock %}

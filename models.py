@@ -1,8 +1,24 @@
-from datetime import datetime
+import os
+import secrets
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+
+# Horas antes de la sesión en las que se cierran las reservas
+HORAS_CIERRE = int(os.environ.get("HORAS_CIERRE", 5))
+
+
+def ahora():
+    """Hora actual de Madrid. El servidor de PythonAnywhere va en UTC (2 h menos)."""
+    return datetime.now(ZoneInfo("Europe/Madrid")).replace(tzinfo=None)
+
+
+def nuevo_token():
+    """Cadena aleatoria imposible de adivinar, para los enlaces privados."""
+    return secrets.token_urlsafe(16)
 
 
 class Sesion(db.Model):
@@ -31,6 +47,19 @@ class Sesion(db.Model):
     def completa(self):
         return self.libres == 0
 
+    @property
+    def cierre(self):
+        """Momento a partir del cual ya no se admiten reservas."""
+        return self.fecha_hora - timedelta(hours=HORAS_CIERRE)
+
+    @property
+    def abierta(self):
+        return ahora() < self.cierre
+
+    @property
+    def pasada(self):
+        return self.fecha_hora < ahora()
+
 
 class Reserva(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,7 +70,8 @@ class Reserva(db.Model):
     adultos = db.Column(db.Integer, nullable=False, default=1)
     menores = db.Column(db.Integer, nullable=False, default=0)
     numero = db.Column(db.Integer, nullable=False)
-    creada = db.Column(db.DateTime, default=datetime.now)
+    token = db.Column(db.String(32), unique=True, nullable=False, default=nuevo_token)
+    creada = db.Column(db.DateTime, default=ahora)
 
     @property
     def personas(self):

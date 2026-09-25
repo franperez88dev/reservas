@@ -1,0 +1,6 @@
+Hola, {{ reserva.nombre }}:
+
+Lamentamos comunicarte que la sesión "{{ reserva.sesion.titulo }}" del {{ reserva.sesion.fecha_hora | fecha }} se ha cancelado, así que tu reserva {{ reserva.codigo }} queda anulada.
+
+Sentimos las molestias.
+{% include "emails/_pie.txt" %}

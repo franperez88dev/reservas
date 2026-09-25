@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}Reserva cancelada{% endblock %}
+{% block contenido %}
+<div class="confirmacion">
+  {% if reserva %}
+    <h1>Reserva cancelada</h1>
+    <p>Hemos anulado la reserva <strong>{{ reserva.codigo }}</strong>. Gracias por avisar: la plaza ya está libre para otra familia.</p>
+  {% else %}
+    <h1>Esta reserva ya no existe</h1>
+    <p>Probablemente ya se canceló antes.</p>
+  {% endif %}
+  <a class="boton" href="{{ url_for('index') }}">Ver sesiones</a>
+</div>
+{% endblock %}

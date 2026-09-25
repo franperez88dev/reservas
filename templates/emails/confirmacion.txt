@@ -1,0 +1,15 @@
+Hola, {{ reserva.nombre }}:
+
+Tu reserva está confirmada.
+
+  Número de reserva: {{ reserva.codigo }}
+  Sesión: {{ reserva.sesion.titulo }}
+  Cuándo: {{ reserva.sesion.fecha_hora | fecha }}
+{% if reserva.sesion.lugar %}  Dónde: {{ reserva.sesion.lugar }}
+{% endif %}  Plazas: {{ reserva.adultos }} adulto{{ 's' if reserva.adultos > 1 }}{% if reserva.menores %} y {{ reserva.menores }} menor{{ 'es' if reserva.menores > 1 }}{% endif %}
+
+En la entrada te pediremos tu nombre y apellidos.
+
+Si no puedes venir, cancela tu reserva desde este enlace para dejar la plaza a otra familia:
+{{ enlace_cancelar }}
+{% include "emails/_pie.txt" %}

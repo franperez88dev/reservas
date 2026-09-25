@@ -8,8 +8,10 @@
 
 {% if sesion.completa %}
   <p class="aviso aviso-error">Esta sesión está completa.</p>
+{% elif not sesion.abierta %}
+  <p class="aviso aviso-error">Las reservas para esta sesión se cerraron {{ horas_cierre }} horas antes del inicio.</p>
 {% else %}
-  <p><strong>{{ sesion.libres }}</strong> plazas libres.</p>
+  <p><strong>{{ sesion.libres }}</strong> plazas libres. Las reservas se cierran {{ horas_cierre }} horas antes.</p>
   <form method="post" class="formulario">
     <label>Nombre
       <input name="nombre" required value="{{ form.get('nombre', '') }}">
@@ -17,7 +19,7 @@
     <label>Apellidos
       <input name="apellidos" required value="{{ form.get('apellidos', '') }}">
     </label>
-    <label>Email
+    <label>Email <small>(te enviaremos la confirmación)</small>
       <input name="email" type="email" required value="{{ form.get('email', '') }}">
     </label>
     <label>Adultos

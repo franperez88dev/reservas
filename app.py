@@ -7,15 +7,22 @@ from functools import wraps
 
 from flask import (Flask, Response, abort, flash, redirect, render_template, request,
                    session, url_for)
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-from models import Reserva, Sesion, db
+from correo import enviar
+from models import HORAS_CIERRE, Reserva, Sesion, ahora, db
 
 app = Flask(__name__)
+# PythonAnywhere está detrás de un proxy: así los enlaces de los emails salen con https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "cambia-esto-en-produccion")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URL", "sqlite:///" + os.path.join(app.root_path, "reservas.db")
 )
 app.config["NOMBRE_SITIO"] = os.environ.get("NOMBRE_SITIO", "Reservas")
+app.config["CONTACTO_TELEFONO"] = os.environ.get("CONTACTO_TELEFONO", "")
+app.config["CONTACTO_EMAIL"] = os.environ.get("CONTACTO_EMAIL", "")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 MAX_PERSONAS_POR_RESERVA = 6
 
@@ -26,7 +33,14 @@ with app.app_context():
 
 @app.context_processor
 def variables_globales():
-    return {"nombre_sitio": app.config["NOMBRE_SITIO"], "es_admin": session.get("admin")}
+    """Variables disponibles en TODAS las plantillas sin tener que pasarlas."""
+    return {
+        "nombre_sitio": app.config["NOMBRE_SITIO"],
+        "contacto_telefono": app.config["CONTACTO_TELEFONO"],
+        "contacto_email": app.config["CONTACTO_EMAIL"],
+        "horas_cierre": HORAS_CIERRE,
+        "es_admin": session.get("admin"),
+    }
 
 
 @app.template_filter("fecha")
@@ -42,7 +56,7 @@ def formatear_fecha(dt):
 @app.route("/")
 def index():
     proximas = (
-        Sesion.query.filter(Sesion.fecha_hora >= datetime.now())
+        Sesion.query.filter(Sesion.fecha_hora >= ahora())
         .order_by(Sesion.fecha_hora)
         .all()
     )
@@ -52,10 +66,11 @@ def index():
 @app.route("/sesion/<int:sesion_id>", methods=["GET", "POST"])
 def reservar(sesion_id):
     sesion_ = db.get_or_404(Sesion, sesion_id)
-    if sesion_.fecha_hora < datetime.now():
+    if sesion_.pasada:
         abort(404)
 
-    if request.method == "POST":
+    # Si ya no se admiten reservas, la plantilla muestra el aviso y no el formulario
+    if request.method == "POST" and sesion_.abierta:
         nombre = request.form.get("nombre", "").strip()
         apellidos = request.form.get("apellidos", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -70,14 +85,16 @@ def reservar(sesion_id):
             errores.append("Escribe tu nombre y apellidos.")
         if "@" not in email:
             errores.append("Escribe un email válido.")
+        elif Reserva.query.filter_by(sesion_id=sesion_.id, email=email).first():
+            errores.append("Ya hay una reserva con este email para esta sesión. "
+                           "Si quieres cambiarla, cancélala desde el enlace de tu email "
+                           "y vuelve a reservar.")
         if adultos < 1 or menores < 0:
             errores.append("Tiene que venir al menos 1 adulto.")
         elif adultos + menores > MAX_PERSONAS_POR_RESERVA:
             errores.append(f"Máximo {MAX_PERSONAS_POR_RESERVA} plazas por reserva.")
         elif adultos + menores > sesion_.libres:
             errores.append(f"Solo quedan {sesion_.libres} plazas libres.")
-
-        # TODO (parte 5): duplicados
 
         if errores:
             for e in errores:
@@ -91,16 +108,46 @@ def reservar(sesion_id):
                           numero=numero)
         db.session.add(reserva)
         db.session.commit()
-        return redirect(url_for("confirmacion", reserva_id=reserva.id))
+
+        enviar(reserva.email, f"Reserva confirmada · {reserva.codigo}", "confirmacion",
+               reserva=reserva,
+               enlace_cancelar=url_for("cancelar_reserva", token=reserva.token,
+                                       _external=True))
+        return redirect(url_for("ver_reserva", token=reserva.token))
 
     return render_template("reservar.html", sesion=sesion_, form={},
                            max_personas=MAX_PERSONAS_POR_RESERVA)
 
 
-@app.route("/confirmacion/<int:reserva_id>")
-def confirmacion(reserva_id):
-    reserva = db.get_or_404(Reserva, reserva_id)
+@app.route("/reserva/<token>")
+def ver_reserva(token):
+    """Página de confirmación. Usa el token secreto, no el id, para que nadie
+    pueda ver las reservas de otros cambiando el número de la URL."""
+    reserva = Reserva.query.filter_by(token=token).first_or_404()
     return render_template("confirmacion.html", reserva=reserva)
+
+
+@app.route("/reserva/<token>/cancelar", methods=["GET", "POST"])
+def cancelar_reserva(token):
+    reserva = Reserva.query.filter_by(token=token).first()
+    if reserva is None:
+        # Ya se canceló (o el enlace está mal): no es un error grave
+        return render_template("cancelada.html", reserva=None)
+    if reserva.sesion.pasada:
+        abort(404)
+
+    # El enlace del email abre una página con un botón (GET). Solo se cancela al
+    # pulsarlo (POST). Algunos programas de correo "visitan" los enlaces solos,
+    # y no queremos que eso cancele la reserva sin querer.
+    if request.method == "POST":
+        datos = {"reserva": reserva}
+        enviar(reserva.email, f"Reserva cancelada · {reserva.codigo}", "cancelacion",
+               **datos)
+        db.session.delete(reserva)
+        db.session.commit()
+        return render_template("cancelada.html", reserva=reserva)
+
+    return render_template("cancelar.html", reserva=reserva)
 
 
 # ---------------------------------------------------------------- admin
@@ -134,7 +181,7 @@ def logout():
 @solo_admin
 def panel():
     sesiones = Sesion.query.order_by(Sesion.fecha_hora.desc()).all()
-    return render_template("admin/panel.html", sesiones=sesiones, ahora=datetime.now())
+    return render_template("admin/panel.html", sesiones=sesiones, ahora=ahora())
 
 
 @app.route("/admin/sesion/nueva", methods=["GET", "POST"])
@@ -146,7 +193,7 @@ def nueva_sesion():
                 titulo=request.form["titulo"].strip(),
                 descripcion=request.form.get("descripcion", "").strip(),
                 lugar=request.form.get("lugar", "").strip(),
-                fecha_hora=datetime.strptime(request.form["fecha_hora"], "%Y-%m-%dT%H:%M"),
+                fecha_hora=datetime_desde_formulario(request.form["fecha_hora"]),
                 plazas=int(request.form["plazas"]),
             )
             if not nueva.titulo or nueva.plazas < 1:
@@ -161,12 +208,36 @@ def nueva_sesion():
     return render_template("admin/nueva_sesion.html", form={})
 
 
+def datetime_desde_formulario(texto):
+    """El <input type="datetime-local"> envía '2026-09-28T16:00'."""
+    return datetime.strptime(texto, "%Y-%m-%dT%H:%M")
+
+
 @app.route("/admin/sesion/<int:sesion_id>")
 @solo_admin
 def ver_reservas(sesion_id):
     sesion_ = db.get_or_404(Sesion, sesion_id)
     reservas = sorted(sesion_.reservas, key=lambda r: r.numero)
     return render_template("admin/reservas.html", sesion=sesion_, reservas=reservas)
+
+
+@app.route("/admin/sesion/<int:sesion_id>/borrar", methods=["POST"])
+@solo_admin
+def borrar_sesion(sesion_id):
+    sesion_ = db.get_or_404(Sesion, sesion_id)
+    avisados = 0
+    if not sesion_.pasada:   # si ya pasó, no tiene sentido avisar a nadie
+        for r in sesion_.reservas:
+            enviar(r.email, f"Sesión cancelada · {sesion_.titulo}", "sesion_cancelada",
+                   reserva=r)
+            avisados += 1
+    db.session.delete(sesion_)   # las reservas se borran solas (cascade)
+    db.session.commit()
+    mensaje = "Sesión borrada."
+    if avisados:
+        mensaje += f" Se ha avisado por email a {avisados} reserva(s)."
+    flash(mensaje, "ok")
+    return redirect(url_for("panel"))
 
 
 def sin_tildes(texto):
@@ -203,10 +274,6 @@ def descargar_listado(sesion_id):
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename={nombre_archivo}"},
     )
-
-
-# TODO (Fran, parte 2): ruta POST para cancelar una reserva
-#   /admin/reserva/<int:reserva_id>/cancelar  -> borra y vuelve a ver_reservas
 
 
 if __name__ == "__main__":

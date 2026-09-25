@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}Cancelar reserva{% endblock %}
+{% block contenido %}
+<div class="confirmacion">
+  <h1>¿Cancelar tu reserva?</h1>
+  <p>{{ reserva.nombre }} {{ reserva.apellidos }} · reserva <strong>{{ reserva.codigo }}</strong></p>
+  <p class="destacado">{{ reserva.sesion.titulo }}<br>
+    <span class="meta">{{ reserva.sesion.fecha_hora | fecha }} · {{ reserva.personas }} plaza{{ 's' if reserva.personas > 1 }}</span></p>
+  <form method="post">
+    <button class="boton boton-peligro" type="submit">Sí, cancelar mi reserva</button>
+  </form>
+  <p><a class="volver" href="{{ url_for('index') }}">No, mantenerla</a></p>
+</div>
+{% endblock %}

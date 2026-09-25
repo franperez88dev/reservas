@@ -8,7 +8,9 @@
     plaza{{ 's' if reserva.personas > 1 }}</strong> para:</p>
   <p class="destacado">{{ reserva.sesion.titulo }}<br>
     <span class="meta">{{ reserva.sesion.fecha_hora | fecha }}{% if reserva.sesion.lugar %} · {{ reserva.sesion.lugar }}{% endif %}</span></p>
-  <p class="meta">Si no puedes venir, avisa para liberar la plaza.</p>
+  <p class="meta">Te hemos enviado la confirmación a <strong>{{ reserva.email }}</strong>.<br>
+    Si no llega en unos minutos, mira en la carpeta de spam.</p>
+  <p class="meta">¿No puedes venir? <a href="{{ url_for('cancelar_reserva', token=reserva.token) }}">Cancela tu reserva</a> para dejar la plaza a otra familia.</p>
   <a class="boton" href="{{ url_for('index') }}">Volver</a>
 </div>
 {% endblock %}

@@ -1,0 +1,6 @@
+
+Un saludo,
+{{ nombre_sitio }}
+{% if contacto_telefono or contacto_email %}
+Para cualquier duda:{% if contacto_telefono %} {{ contacto_telefono }}{% endif %}{% if contacto_telefono and contacto_email %} ·{% endif %}{% if contacto_email %} {{ contacto_email }}{% endif %}
+{% endif %}

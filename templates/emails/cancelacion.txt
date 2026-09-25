@@ -1,0 +1,6 @@
+Hola, {{ reserva.nombre }}:
+
+Hemos cancelado tu reserva {{ reserva.codigo }} para "{{ reserva.sesion.titulo }}" ({{ reserva.sesion.fecha_hora | fecha }}).
+
+Tus plazas han quedado libres para otras familias. Si cambias de idea y aún quedan plazas, puedes volver a reservar en la web.
+{% include "emails/_pie.txt" %}
