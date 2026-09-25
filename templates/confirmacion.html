@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}Reserva confirmada{% endblock %}
+{% block contenido %}
+<div class="confirmacion">
+  <h1>¡Reserva hecha!</h1>
+  <p>{{ reserva.nombre }}, tienes <strong>{{ reserva.personas }}
+    plaza{{ 's' if reserva.personas > 1 }}</strong> para:</p>
+  <p class="destacado">{{ reserva.sesion.titulo }}<br>
+    <span class="meta">{{ reserva.sesion.fecha_hora | fecha }}{% if reserva.sesion.lugar %} · {{ reserva.sesion.lugar }}{% endif %}</span></p>
+  <p class="meta">Si no puedes venir, avisa para liberar la plaza.</p>
+  <a class="boton" href="{{ url_for('index') }}">Volver</a>
+</div>
+{% endblock %}

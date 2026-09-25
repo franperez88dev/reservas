@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Acceso admin{% endblock %}
+{% block contenido %}
+<h1>Acceso</h1>
+<form method="post" class="formulario">
+  <label>Contraseña
+    <input name="password" type="password" required autofocus>
+  </label>
+  <button class="boton" type="submit">Entrar</button>
+</form>
+{% endblock %}

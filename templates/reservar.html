@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titulo %}Reservar · {{ sesion.titulo }}{% endblock %}
+{% block contenido %}
+<a class="volver" href="{{ url_for('index') }}">← Todas las sesiones</a>
+<h1>{{ sesion.titulo }}</h1>
+<p class="meta">{{ sesion.fecha_hora | fecha }}{% if sesion.lugar %} · {{ sesion.lugar }}{% endif %}</p>
+{% if sesion.descripcion %}<p>{{ sesion.descripcion }}</p>{% endif %}
+
+{% if sesion.completa %}
+  <p class="aviso aviso-error">Esta sesión está completa.</p>
+{% else %}
+  <p><strong>{{ sesion.libres }}</strong> plazas libres.</p>
+  <form method="post" class="formulario">
+    <label>Nombre
+      <input name="nombre" required value="{{ form.get('nombre', '') }}">
+    </label>
+    <label>Email
+      <input name="email" type="email" required value="{{ form.get('email', '') }}">
+    </label>
+    <label>Teléfono <small>(opcional)</small>
+      <input name="telefono" type="tel" value="{{ form.get('telefono', '') }}">
+    </label>
+    <label>Número de plazas
+      <input name="personas" type="number" min="1"
+             max="{{ [max_personas, sesion.libres] | min }}"
+             value="{{ form.get('personas', 1) }}" required>
+    </label>
+    <button class="boton" type="submit">Confirmar reserva</button>
+  </form>
+{% endif %}
+{% endblock %}

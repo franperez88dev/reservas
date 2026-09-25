@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Reservas · {{ sesion.titulo }}{% endblock %}
+{% block contenido %}
+<a class="volver" href="{{ url_for('panel') }}">← Panel</a>
+<h1>{{ sesion.titulo }}</h1>
+<p class="meta">{{ sesion.fecha_hora | fecha }} · {{ sesion.ocupadas }} / {{ sesion.plazas }} plazas</p>
+
+{# TODO (Fran, parte 1): pinta una tabla con las reservas de la sesión:
+   nombre, email, teléfono, nº de plazas y fecha en que reservó.
+   Si no hay ninguna, muestra un mensaje.
+   Pista: reutiliza la clase "tabla" y mira cómo lo hace admin/panel.html. #}
+
+{# TODO (Fran, parte 2): en cada fila, un botón "Cancelar" que haga POST a
+   tu nueva ruta de cancelar. Pista: un <form method="post"> por fila. #}
+{% endblock %}

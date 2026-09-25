@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva sesión{% endblock %}
+{% block contenido %}
+<a class="volver" href="{{ url_for('panel') }}">← Panel</a>
+<h1>Nueva sesión</h1>
+<form method="post" class="formulario">
+  <label>Título
+    <input name="titulo" required value="{{ form.get('titulo', '') }}">
+  </label>
+  <label>Fecha y hora
+    <input name="fecha_hora" type="datetime-local" required value="{{ form.get('fecha_hora', '') }}">
+  </label>
+  <label>Plazas
+    <input name="plazas" type="number" min="1" required value="{{ form.get('plazas', '') }}">
+  </label>
+  <label>Lugar <small>(opcional)</small>
+    <input name="lugar" value="{{ form.get('lugar', '') }}">
+  </label>
+  <label>Descripción <small>(opcional)</small>
+    <textarea name="descripcion" rows="3">{{ form.get('descripcion', '') }}</textarea>
+  </label>
+  <button class="boton" type="submit">Crear</button>
+</form>
+{% endblock %}

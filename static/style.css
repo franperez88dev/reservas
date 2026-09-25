@@ -1,0 +1,87 @@
+:root {
+  --fondo: #faf7f2;
+  --tarjeta: #ffffff;
+  --texto: #2b2622;
+  --suave: #7a716a;
+  --acento: #c0562f;
+  --acento-oscuro: #9c4222;
+  --borde: #e8e1d8;
+  --ok: #2f7a4f;
+  --error: #b3261e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+  line-height: 1.5;
+}
+
+.cabecera {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid var(--borde);
+  background: var(--tarjeta);
+}
+.logo { font-weight: 700; font-size: 1.2rem; color: var(--acento); text-decoration: none; }
+.cabecera nav a { color: var(--suave); }
+
+.contenedor { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+h1 { font-size: 1.6rem; margin: .5rem 0 1rem; }
+h2 { font-size: 1.15rem; margin: 0 0 .25rem; }
+.meta { color: var(--suave); margin: 0 0 .5rem; }
+.vacio { color: var(--suave); }
+.volver { color: var(--suave); text-decoration: none; font-size: .9rem; }
+
+.lista-sesiones { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
+.tarjeta {
+  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+}
+.tarjeta p { margin: .25rem 0 0; }
+.tarjeta-completa { opacity: .6; }
+.acciones { display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; }
+
+.etiqueta {
+  font-size: .85rem; padding: .2rem .6rem; border-radius: 999px;
+  background: #eaf4ee; color: var(--ok); white-space: nowrap;
+}
+.etiqueta-llena { background: #f6e3e1; color: var(--error); }
+
+.boton {
+  display: inline-block; background: var(--acento); color: #fff; border: 0;
+  padding: .6rem 1.1rem; border-radius: 8px; font: inherit; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+}
+.boton:hover { background: var(--acento-oscuro); }
+
+.formulario { display: grid; gap: .9rem; max-width: 420px; margin-top: 1rem; }
+.formulario label { display: grid; gap: .3rem; font-weight: 600; }
+.formulario small { font-weight: 400; color: var(--suave); }
+.formulario input, .formulario textarea {
+  font: inherit; padding: .55rem .7rem; border: 1px solid var(--borde);
+  border-radius: 8px; background: #fff;
+}
+
+.aviso { padding: .7rem 1rem; border-radius: 8px; }
+.aviso-error { background: #f6e3e1; color: var(--error); }
+.aviso-ok { background: #eaf4ee; color: var(--ok); }
+
+.confirmacion { text-align: center; padding-top: 1rem; }
+.destacado { font-size: 1.2rem; font-weight: 600; }
+
+.fila { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.tabla { width: 100%; border-collapse: collapse; background: var(--tarjeta); margin-top: 1rem; }
+.tabla th, .tabla td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--borde); }
+.tabla th { font-size: .85rem; color: var(--suave); }
+.tabla .pasada { color: var(--suave); }
+
+@media (max-width: 520px) {
+  .acciones { align-items: flex-start; flex-direction: row; }
+  .tabla { font-size: .9rem; }
+}

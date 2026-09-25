@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Panel{% endblock %}
+{% block contenido %}
+<div class="fila">
+  <h1>Sesiones</h1>
+  <a class="boton" href="{{ url_for('nueva_sesion') }}">+ Nueva sesión</a>
+</div>
+
+<table class="tabla">
+  <thead><tr><th>Fecha</th><th>Sesión</th><th>Ocupación</th><th></th></tr></thead>
+  <tbody>
+  {% for s in sesiones %}
+    <tr {% if s.fecha_hora < ahora %}class="pasada"{% endif %}>
+      <td>{{ s.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+      <td>{{ s.titulo }}</td>
+      <td>{{ s.ocupadas }} / {{ s.plazas }}</td>
+      <td><a href="{{ url_for('ver_reservas', sesion_id=s.id) }}">Ver reservas</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="vacio">Aún no hay sesiones.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
