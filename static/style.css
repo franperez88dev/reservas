@@ -80,6 +80,9 @@ h2 { font-size: 1.15rem; margin: 0 0 .25rem; }
 .tabla th, .tabla td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--borde); }
 .tabla th { font-size: .85rem; color: var(--suave); }
 .tabla .pasada { color: var(--suave); }
+.tabla .num { text-align: right; }
+.tabla tfoot td { font-weight: 700; border-bottom: 0; }
+.tabla-scroll { overflow-x: auto; }
 
 @media (max-width: 520px) {
   .acciones { align-items: flex-start; flex-direction: row; }

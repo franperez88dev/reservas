@@ -36,7 +36,18 @@ class Reserva(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sesion_id = db.Column(db.Integer, db.ForeignKey("sesion.id"), nullable=False)
     nombre = db.Column(db.String(120), nullable=False)
+    apellidos = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), nullable=False)
-    telefono = db.Column(db.String(30), default="")
-    personas = db.Column(db.Integer, nullable=False, default=1)
+    adultos = db.Column(db.Integer, nullable=False, default=1)
+    menores = db.Column(db.Integer, nullable=False, default=0)
+    numero = db.Column(db.Integer, nullable=False)
     creada = db.Column(db.DateTime, default=datetime.now)
+
+    @property
+    def personas(self):
+        return self.adultos + self.menores
+
+    @property
+    def codigo(self):
+        fecha = self.sesion.fecha_hora.strftime("%d%m_%H%M")
+        return f"{fecha}_{self.numero:02d}"

@@ -1,8 +1,12 @@
+import csv
+import io
 import os
+import unicodedata
 from datetime import datetime
 from functools import wraps
 
-from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
+from flask import (Flask, Response, abort, flash, redirect, render_template, request,
+                   session, url_for)
 
 from models import Reserva, Sesion, db
 
@@ -53,25 +57,27 @@ def reservar(sesion_id):
 
     if request.method == "POST":
         nombre = request.form.get("nombre", "").strip()
+        apellidos = request.form.get("apellidos", "").strip()
         email = request.form.get("email", "").strip().lower()
-        telefono = request.form.get("telefono", "").strip()
         try:
-            personas = int(request.form.get("personas", 1))
+            adultos = int(request.form.get("adultos", 1))
+            menores = int(request.form.get("menores", 0))
         except ValueError:
-            personas = 0
+            adultos, menores = 0, -1   # fuerza el error de abajo
 
         errores = []
-        if not nombre:
-            errores.append("Escribe tu nombre.")
+        if not nombre or not apellidos:
+            errores.append("Escribe tu nombre y apellidos.")
         if "@" not in email:
             errores.append("Escribe un email válido.")
-        if not 1 <= personas <= MAX_PERSONAS_POR_RESERVA:
-            errores.append(f"Puedes reservar entre 1 y {MAX_PERSONAS_POR_RESERVA} plazas.")
-        elif personas > sesion_.libres:
+        if adultos < 1 or menores < 0:
+            errores.append("Tiene que venir al menos 1 adulto.")
+        elif adultos + menores > MAX_PERSONAS_POR_RESERVA:
+            errores.append(f"Máximo {MAX_PERSONAS_POR_RESERVA} plazas por reserva.")
+        elif adultos + menores > sesion_.libres:
             errores.append(f"Solo quedan {sesion_.libres} plazas libres.")
 
-        # TODO (Fran, parte 3): evitar que el mismo email reserve dos veces
-        # en la misma sesión.
+        # TODO (parte 5): duplicados
 
         if errores:
             for e in errores:
@@ -79,8 +85,10 @@ def reservar(sesion_id):
             return render_template("reservar.html", sesion=sesion_, form=request.form,
                                    max_personas=MAX_PERSONAS_POR_RESERVA)
 
-        reserva = Reserva(sesion=sesion_, nombre=nombre, email=email,
-                          telefono=telefono, personas=personas)
+        numero = max((r.numero for r in sesion_.reservas), default=0) + 1
+        reserva = Reserva(sesion=sesion_, nombre=nombre, apellidos=apellidos,
+                          email=email, adultos=adultos, menores=menores,
+                          numero=numero)
         db.session.add(reserva)
         db.session.commit()
         return redirect(url_for("confirmacion", reserva_id=reserva.id))
@@ -156,9 +164,45 @@ def nueva_sesion():
 @app.route("/admin/sesion/<int:sesion_id>")
 @solo_admin
 def ver_reservas(sesion_id):
-    # TODO (Fran, parte 1): carga la sesión y pásala a la plantilla
-    # admin/reservas.html para listar quién ha reservado.
-    abort(501)
+    sesion_ = db.get_or_404(Sesion, sesion_id)
+    reservas = sorted(sesion_.reservas, key=lambda r: r.numero)
+    return render_template("admin/reservas.html", sesion=sesion_, reservas=reservas)
+
+
+def sin_tildes(texto):
+    """'Álvarez' -> 'alvarez', para ordenar alfabéticamente sin que las tildes molesten."""
+    descompuesto = unicodedata.normalize("NFD", texto.lower())
+    return "".join(c for c in descompuesto if unicodedata.category(c) != "Mn")
+
+
+@app.route("/admin/sesion/<int:sesion_id>/listado.csv")
+@solo_admin
+def descargar_listado(sesion_id):
+    """Listado para imprimir el día del evento, ordenado por apellidos."""
+    sesion_ = db.get_or_404(Sesion, sesion_id)
+    reservas = sorted(sesion_.reservas,
+                      key=lambda r: (sin_tildes(r.apellidos), sin_tildes(r.nombre)))
+
+    salida = io.StringIO()
+    # ";" y BOM (utf-8-sig) para que el Excel en español lo abra bien a la primera
+    escritor = csv.writer(salida, delimiter=";")
+    escritor.writerow(["Nº reserva", "Apellidos", "Nombre", "Adultos", "Menores",
+                       "Total", "Asistencia"])
+    for r in reservas:
+        escritor.writerow([r.codigo, r.apellidos, r.nombre, r.adultos, r.menores,
+                           r.personas, ""])
+    escritor.writerow([])
+    escritor.writerow(["", "", "TOTAL",
+                       sum(r.adultos for r in reservas),
+                       sum(r.menores for r in reservas),
+                       sesion_.ocupadas, ""])
+
+    nombre_archivo = f"listado_{sesion_.fecha_hora:%d%m_%H%M}.csv"
+    return Response(
+        salida.getvalue().encode("utf-8-sig"),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={nombre_archivo}"},
+    )
 
 
 # TODO (Fran, parte 2): ruta POST para cancelar una reserva

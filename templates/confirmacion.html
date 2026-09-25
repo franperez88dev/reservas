@@ -3,6 +3,7 @@
 {% block contenido %}
 <div class="confirmacion">
   <h1>¡Reserva hecha!</h1>
+  <p>Tu número de reserva es <strong>{{ reserva.codigo }}</strong></p>
   <p>{{ reserva.nombre }}, tienes <strong>{{ reserva.personas }}
     plaza{{ 's' if reserva.personas > 1 }}</strong> para:</p>
   <p class="destacado">{{ reserva.sesion.titulo }}<br>

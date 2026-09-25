@@ -14,16 +14,17 @@
     <label>Nombre
       <input name="nombre" required value="{{ form.get('nombre', '') }}">
     </label>
+    <label>Apellidos
+      <input name="apellidos" required value="{{ form.get('apellidos', '') }}">
+    </label>
     <label>Email
       <input name="email" type="email" required value="{{ form.get('email', '') }}">
     </label>
-    <label>Teléfono <small>(opcional)</small>
-      <input name="telefono" type="tel" value="{{ form.get('telefono', '') }}">
+    <label>Adultos
+      <input name="adultos" type="number" min="1" value="{{ form.get('adultos', 1) }}" required>
     </label>
-    <label>Número de plazas
-      <input name="personas" type="number" min="1"
-             max="{{ [max_personas, sesion.libres] | min }}"
-             value="{{ form.get('personas', 1) }}" required>
+    <label>Menores
+      <input name="menores" type="number" min="0" value="{{ form.get('menores', 0) }}" required>
     </label>
     <button class="boton" type="submit">Confirmar reserva</button>
   </form>
