@@ -15,7 +15,8 @@ Esta guía explica cómo funciona la web de reservas, sin tecnicismos. Tiene dos
 
 ## Lo esencial en un minuto
 
-- La web **solo sirve para reservar plaza**. No cobra nada: el pago se gestiona aparte.
+- La web **solo sirve para reservar plaza**. No cobra nada: el importe se abona en la
+  entrada del pase, y así lo avisa la web en la portada y al confirmar la reserva.
 - Cada día de cuentacuentos puede tener dos **pases**: el de las **11:00** y el de las **12:00**.
 - Cada reserva es de **una familia**: mínimo **1 adulto y 1 menor**, máximo **4 personas** en total.
 - Las reservas se **cierran 5 horas antes** de cada pase.

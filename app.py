@@ -25,6 +25,7 @@ app.config["CONTACTO_TELEFONO"] = os.environ.get("CONTACTO_TELEFONO", "")
 app.config["CONTACTO_EMAIL"] = os.environ.get("CONTACTO_EMAIL", "")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 MAX_PERSONAS_POR_RESERVA = 4
+PRECIO_POR_RESERVA = 20   # euros por familia, vengan 2, 3 o 4; se paga en la entrada
 
 db.init_app(app)
 with app.app_context():
@@ -39,6 +40,7 @@ def variables_globales():
         "contacto_telefono": app.config["CONTACTO_TELEFONO"],
         "contacto_email": app.config["CONTACTO_EMAIL"],
         "horas_cierre": HORAS_CIERRE,
+        "precio_reserva": PRECIO_POR_RESERVA,
         "es_admin": session.get("admin"),
     }
 

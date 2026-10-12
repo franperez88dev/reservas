@@ -2,6 +2,7 @@
 {% set con_carteles = true %}
 {% block contenido %}
 <h1>Próximas sesiones</h1>
+{% include "_aviso_pago.html" %}
 
 {% if not sesiones %}
   <p class="vacio">Ahora mismo no hay sesiones programadas. ¡Vuelve pronto!</p>
