@@ -10,6 +10,9 @@ db = SQLAlchemy()
 # Horas antes de la sesión en las que se cierran las reservas
 HORAS_CIERRE = int(os.environ.get("HORAS_CIERRE", 5))
 
+# Horas a las que puede haber pase: las del desplegable de "Nueva sesión"
+HORAS_PASE = ["11:00", "12:00"]
+
 
 def ahora():
     """Hora actual de Madrid. El servidor de PythonAnywhere va en UTC (2 h menos)."""
@@ -34,6 +37,16 @@ class Sesion(db.Model):
     reservas = db.relationship(
         "Reserva", backref="sesion", cascade="all, delete-orphan", lazy=True
     )
+
+    @property
+    def nombre(self):
+        """Lo que se enseña como título. De momento es siempre igual: solo cambia
+        la hora (la columna `titulo` se conserva por las sesiones antiguas)."""
+        return f"Pase de las {self.fecha_hora:%H:%M}"
+
+    @property
+    def dia(self):
+        return self.fecha_hora.date()
 
     @property
     def ocupadas(self):
@@ -73,11 +86,33 @@ class Reserva(db.Model):
     token = db.Column(db.String(32), unique=True, nullable=False, default=nuevo_token)
     creada = db.Column(db.DateTime, default=ahora)
 
+    asistentes = db.relationship(
+        "Asistente", backref="reserva", cascade="all, delete-orphan", lazy=True,
+        order_by="Asistente.id"
+    )
+
     @property
     def personas(self):
         return self.adultos + self.menores
 
     @property
+    def nombres_adultos(self):
+        return [a.nombre for a in self.asistentes if not a.menor]
+
+    @property
+    def nombres_menores(self):
+        return [a.nombre for a in self.asistentes if a.menor]
+
+    @property
     def codigo(self):
         fecha = self.sesion.fecha_hora.strftime("%d%m_%H%M")
         return f"{fecha}_{self.numero:02d}"
+
+
+class Asistente(db.Model):
+    """Cada persona que viene con una reserva. Las reservas antiguas no tienen."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    reserva_id = db.Column(db.Integer, db.ForeignKey("reserva.id"), nullable=False)
+    nombre = db.Column(db.String(120), nullable=False)
+    menor = db.Column(db.Boolean, nullable=False, default=False)

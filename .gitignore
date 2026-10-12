@@ -3,3 +3,6 @@ __pycache__/
 *.db
 instance/
 .vscode/
+.claude/
+PASOS_PYTHONANYWHERE.md
+static/img/title navbar.png

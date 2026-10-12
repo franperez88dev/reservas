@@ -12,7 +12,7 @@
   {% for s in sesiones %}
     <tr {% if s.fecha_hora < ahora %}class="pasada"{% endif %}>
       <td>{{ s.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
-      <td>{{ s.titulo }}</td>
+      <td>{{ s.nombre }}</td>
       <td>{{ s.ocupadas }} / {{ s.plazas }}</td>
       <td><a href="{{ url_for('ver_reservas', sesion_id=s.id) }}">Ver reservas</a></td>
     </tr>

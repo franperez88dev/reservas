@@ -4,24 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}{{ nombre_sitio }}{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=6) }}">
 </head>
 <body>
   <header class="cabecera">
-    <a class="logo" href="{{ url_for('index') }}">{{ nombre_sitio }}</a>
+    <a class="logo" href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='img/titulo-navbar.png') }}" alt="{{ nombre_sitio }}"></a>
     {% if es_admin %}
       <nav><a href="{{ url_for('panel') }}">Panel</a> · <a href="{{ url_for('logout') }}">Salir</a></nav>
     {% endif %}
   </header>
 
-  <main class="contenedor">
-    {% with mensajes = get_flashed_messages(with_categories=true) %}
-      {% for categoria, msg in mensajes %}
-        <p class="aviso aviso-{{ categoria }}">{{ msg }}</p>
-      {% endfor %}
-    {% endwith %}
-    {% block contenido %}{% endblock %}
-  </main>
+  {# Las páginas que ponen {% set con_carteles = true %} llevan los dos carteles #}
+  <div class="pagina{% if con_carteles %} pagina-carteles{% endif %}">
+    {% if con_carteles %}
+    <div class="carteles">
+      <img class="cartel cartel-izq" src="{{ url_for('static', filename='img/cartel-cuentacuentos.jpg') }}"
+           alt="Cuentacuentos en Familia, para peques de 0 a 4 años. 31 de octubre, pases a las 11:00 y a las 12:00. 20 € por familia (máximo 4 personas). En C.S.A. Teatrez, c/ Foso 64.">
+      <img class="cartel cartel-der" src="{{ url_for('static', filename='img/cartel-historias.jpg') }}"
+           alt="Defendemos el primer capítulo de todas las historias. Huelga indefinida, ciclo educativo 0-3.">
+    </div>
+    {% endif %}
+    <main class="contenedor">
+      {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% for categoria, msg in mensajes %}
+          <p class="aviso aviso-{{ categoria }}">{{ msg }}</p>
+        {% endfor %}
+      {% endwith %}
+      {% block contenido %}{% endblock %}
+    </main>
+  </div>
 
   {% if contacto_telefono or contacto_email %}
   <footer class="pie">

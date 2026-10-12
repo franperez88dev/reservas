@@ -6,7 +6,7 @@
   <p>Tu número de reserva es <strong>{{ reserva.codigo }}</strong></p>
   <p>{{ reserva.nombre }}, tienes <strong>{{ reserva.personas }}
     plaza{{ 's' if reserva.personas > 1 }}</strong> para:</p>
-  <p class="destacado">{{ reserva.sesion.titulo }}<br>
+  <p class="destacado">{{ reserva.sesion.nombre }}<br>
     <span class="meta">{{ reserva.sesion.fecha_hora | fecha }}{% if reserva.sesion.lugar %} · {{ reserva.sesion.lugar }}{% endif %}</span></p>
   <p class="meta">Te hemos enviado la confirmación a <strong>{{ reserva.email }}</strong>.<br>
     Si no llega en unos minutos, mira en la carpeta de spam.</p>

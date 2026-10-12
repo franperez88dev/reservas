@@ -1,11 +1,14 @@
 :root {
-  --fondo: #faf7f2;
-  --tarjeta: #ffffff;
+  --fondo: #fefbb7;
+  --tarjeta: #fffef2;
   --texto: #2b2622;
-  --suave: #7a716a;
-  --acento: #c0562f;
-  --acento-oscuro: #9c4222;
-  --borde: #e8e1d8;
+  --suave: #6b6355;
+  --acento: #f7cf2e;
+  --acento-oscuro: #e9bb0c;
+  --sobre-acento: #1f2a44;   /* texto encima del amarillo: el azul de los carteles */
+  --enlace: #7a5a00;
+  --borde: #ece29a;
+  --fondo-pase: #fffbd0;
   --ok: #2f7a4f;
   --error: #b3261e;
 }
@@ -21,46 +24,101 @@ body {
 }
 
 .cabecera {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 1rem clamp(1rem, 4vw, 2rem);
-  border-bottom: 1px solid var(--borde);
-  background: var(--tarjeta);
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: .5rem clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid var(--acento-oscuro);
+  background: var(--acento);
 }
-.logo { font-weight: 700; font-size: 1.2rem; color: var(--acento); text-decoration: none; }
-.cabecera nav a { color: var(--suave); }
+.logo { min-width: 0; font-weight: 700; font-size: 1.2rem; color: var(--sobre-acento); text-decoration: none; }
+.logo img { display: block; width: 380px; max-width: 100%; height: auto; }
+.cabecera nav { white-space: nowrap; }
+.cabecera nav a { color: var(--sobre-acento); }
 
 .contenedor { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 
-h1 { font-size: 1.6rem; margin: .5rem 0 1rem; }
-h2 { font-size: 1.15rem; margin: 0 0 .25rem; }
+/* Los dos carteles: en una fila encima del contenido y, si la pantalla es ancha,
+   uno a cada lado. */
+.carteles {
+  display: flex; align-items: flex-start; gap: .75rem;
+  max-width: 560px; margin: 0 auto; padding: 1.25rem 1rem 0;
+}
+.cartel {
+  min-width: 0; height: auto; background: var(--tarjeta);
+  border: 1px solid var(--borde); border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(90, 70, 0, .18);
+}
+/* Cada uno crece según su proporción (ancho / alto) para que queden igual de altos */
+.cartel-izq { flex: 1.155 1 0; }
+.cartel-der { flex: .72 1 0; }
+@media (min-width: 1150px) {
+  .pagina-carteles {
+    display: grid; grid-template-columns: 1fr minmax(0, 700px) 1fr; gap: 1.5rem;
+    align-items: start; padding: 0 1.5rem;
+  }
+  .carteles { display: contents; }
+  .pagina-carteles .contenedor {
+    grid-column: 2; grid-row: 1; width: 100%; padding-left: 0; padding-right: 0;
+  }
+  .cartel {
+    grid-row: 1; width: 100%; max-width: 340px;
+    position: sticky; top: 1.5rem; margin-top: 1.5rem;
+  }
+  .cartel-izq { grid-column: 1; justify-self: end; }
+  .cartel-der { grid-column: 3; justify-self: start; }
+}
+
+/* Los títulos encogen en pantallas pequeñas */
+h1 { font-size: clamp(1.2rem, .95rem + 1.3vw, 1.6rem); margin: .5rem 0 1rem; }
+h2, h3 { font-size: clamp(1rem, .9rem + .45vw, 1.15rem); margin: 0 0 .25rem; }
 .meta { color: var(--suave); margin: 0 0 .5rem; }
 .vacio { color: var(--suave); }
 .volver { color: var(--suave); text-decoration: none; font-size: .9rem; }
 
-.lista-sesiones { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
-.tarjeta {
-  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px;
-  padding: 1.1rem 1.25rem;
+/* Una tarjeta por día con sus pases dentro */
+.dia {
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px;
+  padding: clamp(.8rem, 2.5vw, 1.25rem); margin-bottom: 1.25rem;
 }
-.tarjeta p { margin: .25rem 0 0; }
+.dia-titulo {
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  margin: 0 0 .8rem; font-size: .85rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--suave);
+}
+.dia-fecha {
+  background: var(--acento); color: var(--sobre-acento); border-radius: 999px;
+  padding: .2rem .75rem; font-size: clamp(.9rem, .85rem + .3vw, 1rem); font-weight: 700;
+  text-transform: none; letter-spacing: 0;
+}
+.dia-fecha::first-letter { text-transform: uppercase; }
+
+.lista-sesiones { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+.tarjeta {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .5rem 1rem; flex-wrap: wrap;
+  background: var(--fondo-pase); border: 1px solid var(--borde); border-radius: 10px;
+  padding: .7rem clamp(.8rem, 2.5vw, 1.1rem);
+}
+.tarjeta h3 { margin: 0; }
 .tarjeta-completa { opacity: .6; }
-.acciones { display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; }
+.acciones { display: flex; align-items: center; gap: .6rem; }
 
 .etiqueta {
   font-size: .85rem; padding: .2rem .6rem; border-radius: 999px;
   background: #eaf4ee; color: var(--ok); white-space: nowrap;
 }
 .etiqueta-llena { background: #f6e3e1; color: var(--error); }
-.etiqueta-cerrada { background: #eeeae4; color: var(--suave); }
+.etiqueta-cerrada { background: #f1ecc4; color: var(--suave); }
 
 .boton {
-  display: inline-block; background: var(--acento); color: #fff; border: 0;
+  display: inline-block; background: var(--acento); color: var(--sobre-acento); border: 0;
   padding: .6rem 1.1rem; border-radius: 8px; font: inherit; font-weight: 600;
   text-decoration: none; cursor: pointer;
 }
 .boton:hover { background: var(--acento-oscuro); }
-.boton-peligro { background: var(--error); }
+.boton:disabled { opacity: .4; cursor: default; background: var(--acento); }
+.boton-secundario { background: #fff; box-shadow: inset 0 0 0 1px var(--acento-oscuro); }
+.boton-secundario:hover { background: var(--fondo-pase); }
+.boton-peligro { background: var(--error); color: #fff; }
 .boton-peligro:hover { background: #8c1d17; }
 
 .zona-peligro {
@@ -72,17 +130,44 @@ h2 { font-size: 1.15rem; margin: 0 0 .25rem; }
   text-align: center; color: var(--suave); font-size: .9rem;
   padding: 1.5rem 1rem 2rem; border-top: 1px solid var(--borde);
 }
-.pie a { color: var(--acento); }
+.pie a { color: var(--enlace); }
 
 .formulario { display: grid; gap: .9rem; max-width: 420px; margin-top: 1rem; }
 .formulario label { display: grid; gap: .3rem; font-weight: 600; }
 .formulario small { font-weight: 400; color: var(--suave); }
-.formulario input, .formulario textarea {
+.formulario input, .formulario select, .formulario textarea {
   font: inherit; padding: .55rem .7rem; border: 1px solid var(--borde);
   border-radius: 8px; background: #fff;
 }
+/* Recuadros con el nombre de cada asistente, debajo de Adultos y de Menores */
+/* Adultos y Menores: se cambian solo con los botones − y + */
+.contador { display: flex; align-items: center; gap: .5rem; }
+.formulario .contador input {
+  width: 3.5rem; text-align: center; font-weight: 700;
+  appearance: textfield; -moz-appearance: textfield;
+}
+.contador input::-webkit-inner-spin-button,
+.contador input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.contador .boton { width: 2.75rem; height: 2.75rem; padding: 0; font-size: 1.4rem; line-height: 1; }
+.nombres { display: grid; gap: .6rem; padding-left: .9rem; border-left: 3px solid var(--acento); }
+.nombres:empty { display: none; }
+.nombres label { font-weight: 400; font-size: .95rem; }
+/* Avisos de la reserva y botón de enviar, juntos */
+.envio { display: grid; }
+.envio .aviso { margin: 0 0 .7rem; }
 
 .aviso { padding: .7rem 1rem; border-radius: 8px; }
+
+/* Ventana de "¿confirmar nueva reserva?" */
+.popup {
+  width: min(22rem, calc(100vw - 2rem)); padding: 1.25rem; text-align: center;
+  background: var(--tarjeta); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(60, 45, 0, .25);
+}
+.popup::backdrop { background: rgba(43, 38, 34, .45); }
+.popup p { margin: 0 0 1rem; font-weight: 600; }
+.popup-botones { display: flex; justify-content: center; gap: .6rem; }
 .aviso-error { background: #f6e3e1; color: var(--error); }
 .aviso-ok { background: #eaf4ee; color: var(--ok); }
 
@@ -97,8 +182,29 @@ h2 { font-size: 1.15rem; margin: 0 0 .25rem; }
 .tabla .num { text-align: right; }
 .tabla tfoot td { font-weight: 700; border-bottom: 0; }
 .tabla-scroll { overflow-x: auto; }
+.tabla-reservas td { vertical-align: top; }
+.tabla-reservas th:nth-child(2) { width: 36%; }   /* Titular: que el email no se parta */
+.tabla-reservas .codigo { white-space: nowrap; }
+.tabla-reservas .email { overflow-wrap: anywhere; font-size: .9rem; }
 
 @media (max-width: 520px) {
-  .acciones { align-items: flex-start; flex-direction: row; }
+  .boton { padding: .5rem .9rem; }
   .tabla { font-size: .9rem; }
+}
+
+/* Listado de reservas en móvil: cada reserva es una ficha, sin scroll horizontal */
+@media (max-width: 640px) {
+  .tabla-reservas { background: none; }
+  .tabla-reservas thead { display: none; }
+  .tabla-reservas, .tabla-reservas tbody, .tabla-reservas tfoot,
+  .tabla-reservas tr, .tabla-reservas td { display: block; }
+  .tabla-reservas tr {
+    background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px;
+    padding: .5rem .8rem; margin-bottom: .6rem;
+  }
+  .tabla-reservas td, .tabla-reservas td.num { border: 0; padding: .15rem 0; text-align: left; }
+  .tabla-reservas td:empty { display: none; }
+  .tabla-reservas td[data-etiqueta]::before {
+    content: attr(data-etiqueta) ": "; color: var(--suave); font-size: .85rem;
+  }
 }

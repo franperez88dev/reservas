@@ -3,6 +3,8 @@
 Web sencilla para reservar plazas en sesiones con aforo limitado.
 Flask + SQLite, sin pagos. Envía la confirmación por email con enlace para cancelar.
 
+Cómo se usa (familias y administración), explicado sin tecnicismos: [GUIA_DE_USO.md](GUIA_DE_USO.md).
+
 ## Arrancar en local
 
     python -m venv venv

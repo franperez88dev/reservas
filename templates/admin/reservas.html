@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block titulo %}Reservas · {{ sesion.titulo }}{% endblock %}
+{% block titulo %}Reservas · {{ sesion.nombre }}{% endblock %}
 {% block contenido %}
 <a class="volver" href="{{ url_for('panel') }}">← Panel</a>
 <div class="fila">
   <div>
-    <h1>{{ sesion.titulo }}</h1>
+    <h1>{{ sesion.nombre }}</h1>
     <p class="meta">{{ sesion.fecha_hora | fecha }} · {{ sesion.ocupadas }} / {{ sesion.plazas }} plazas</p>
   </div>
   {% if reservas %}
@@ -16,28 +16,30 @@
   <p class="vacio">Todavía no hay reservas para esta sesión.</p>
 {% else %}
   <div class="tabla-scroll">
-  <table class="tabla">
+  {# Pocas columnas para que quepa sin scroll; en móvil cada fila es una ficha #}
+  <table class="tabla tabla-reservas">
     <thead>
-      <tr><th>Nº</th><th>Nombre</th><th>Apellidos</th><th>Email</th>
-          <th class="num">Adultos</th><th class="num">Menores</th></tr>
+      <tr><th>Nº</th><th>Titular</th>
+          <th class="num">Adultos</th><th class="num">Menores</th><th>Asistentes</th></tr>
     </thead>
     <tbody>
     {% for r in reservas %}
       <tr>
-        <td>{{ r.codigo }}</td>
-        <td>{{ r.nombre }}</td>
-        <td>{{ r.apellidos }}</td>
-        <td>{{ r.email }}</td>
-        <td class="num">{{ r.adultos }}</td>
-        <td class="num">{{ r.menores }}</td>
+        <td class="codigo" data-etiqueta="Nº">{{ r.codigo }}</td>
+        <td data-etiqueta="Titular">{{ r.nombre }} {{ r.apellidos }}<br><span class="meta email">{{ r.email }}</span></td>
+        <td class="num" data-etiqueta="Adultos">{{ r.adultos }}</td>
+        <td class="num" data-etiqueta="Menores">{{ r.menores }}</td>
+        <td data-etiqueta="Asistentes">{{ r.nombres_adultos | join(', ') }}
+          {%- if r.nombres_menores %}<br><span class="meta">Menores: {{ r.nombres_menores | join(', ') }}</span>{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
     <tfoot>
       <tr>
-        <td colspan="4">Total</td>
-        <td class="num">{{ reservas | sum(attribute='adultos') }}</td>
-        <td class="num">{{ reservas | sum(attribute='menores') }}</td>
+        <td colspan="2">Total</td>
+        <td class="num" data-etiqueta="Adultos">{{ reservas | sum(attribute='adultos') }}</td>
+        <td class="num" data-etiqueta="Menores">{{ reservas | sum(attribute='menores') }}</td>
+        <td></td>
       </tr>
     </tfoot>
   </table>

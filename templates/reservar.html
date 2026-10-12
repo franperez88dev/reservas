@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% block titulo %}Reservar · {{ sesion.titulo }}{% endblock %}
+{% set con_carteles = true %}
+{% block titulo %}Reservar · {{ sesion.nombre }}{% endblock %}
 {% block contenido %}
 <a class="volver" href="{{ url_for('index') }}">← Todas las sesiones</a>
-<h1>{{ sesion.titulo }}</h1>
+<h1>{{ sesion.nombre }}</h1>
 <p class="meta">{{ sesion.fecha_hora | fecha }}{% if sesion.lugar %} · {{ sesion.lugar }}{% endif %}</p>
 {% if sesion.descripcion %}<p>{{ sesion.descripcion }}</p>{% endif %}
 
@@ -16,19 +17,151 @@
     <label>Nombre
       <input name="nombre" required value="{{ form.get('nombre', '') }}">
     </label>
-    <label>Apellidos
-      <input name="apellidos" required value="{{ form.get('apellidos', '') }}">
+    <label>Primer apellido
+      <input name="primer_apellido" required value="{{ form.get('primer_apellido', '') }}">
+    </label>
+    <label>Segundo apellido
+      <input name="segundo_apellido" required value="{{ form.get('segundo_apellido', '') }}">
     </label>
     <label>Email <small>(te enviaremos la confirmación)</small>
       <input name="email" type="email" required value="{{ form.get('email', '') }}">
     </label>
-    <label>Adultos
-      <input name="adultos" type="number" min="1" value="{{ form.get('adultos', 1) }}" required>
-    </label>
-    <label>Menores
-      <input name="menores" type="number" min="0" value="{{ form.get('menores', 0) }}" required>
-    </label>
-    <button class="boton" type="submit">Confirmar reserva</button>
+    <label for="adultos">Adultos</label>
+    <div class="contador">
+      <button class="boton" type="button" data-paso="-1" aria-label="Quitar un adulto">−</button>
+      <input id="adultos" name="adultos" type="number" min="1" value="{{ form.get('adultos', 1) }}" required>
+      <button class="boton" type="button" data-paso="1" aria-label="Añadir un adulto">+</button>
+    </div>
+    <div class="nombres" id="nombres-adultos">
+      {%- for i in range([[form.get('adultos', 1) | int, 1] | max, max_personas - 1] | min) %}
+      <label>Nombre del adulto {{ i + 1 }}
+        <input name="nombre_adulto" required value="{{ nombres_adultos[i] }}">
+      </label>
+      {%- endfor -%}
+    </div>
+    <label for="menores">Menores</label>
+    <div class="contador">
+      <button class="boton" type="button" data-paso="-1" aria-label="Quitar un menor">−</button>
+      <input id="menores" name="menores" type="number" min="1" value="{{ form.get('menores', 1) }}" required>
+      <button class="boton" type="button" data-paso="1" aria-label="Añadir un menor">+</button>
+    </div>
+    <div class="nombres" id="nombres-menores">
+      {%- for i in range([[form.get('menores', 1) | int, 1] | max, max_personas - 1] | min) %}
+      <label>Nombre del menor {{ i + 1 }}
+        <input name="nombre_menor" required value="{{ nombres_menores[i] }}">
+      </label>
+      {%- endfor -%}
+    </div>
+    {# Los avisos van aquí, pegados al botón, para que se vean sin subir la página #}
+    <div class="envio" id="envio">
+      {% for e in errores %}
+      <p class="aviso aviso-error">{{ e }}</p>
+      {% endfor %}
+      <p class="aviso aviso-error" id="aviso-maximo" hidden>Máximo {{ max_personas }} personas por reserva, entre adultos y menores.</p>
+      <button class="boton" type="submit">Confirmar reserva</button>
+    </div>
+
+    {% if confirmar_repetida %}
+    {# Ese email ya tiene reserva en este pase: se pregunta antes de guardar otra #}
+    <dialog class="popup" id="popup-repetida" open>
+      <p>Ya tienes una reserva para este día. ¿Confirmar nueva reserva?</p>
+      <div class="popup-botones">
+        <button class="boton boton-secundario" type="button" id="popup-cancelar">Cancelar</button>
+        <button class="boton" type="submit" name="confirmar_repetida" value="1">Confirmar</button>
+      </div>
+    </dialog>
+    {% endif %}
   </form>
+
+  <script>
+    // Un recuadro de nombre por cada asistente, según los números de Adultos y Menores
+    var MAXIMO = {{ max_personas }};   // personas por reserva; siempre al menos 1 adulto y 1 menor
+    function ajustarNombres(idNumero, idCaja, campo, etiqueta) {
+      var numero = document.getElementById(idNumero);
+      var caja = document.getElementById(idCaja);
+      numero.addEventListener("input", function () {
+        var n = Math.min(Math.max(parseInt(numero.value, 10) || 1, 1), MAXIMO - 1);
+        while (caja.children.length > n) caja.lastElementChild.remove();
+        while (caja.children.length < n) {
+          var label = document.createElement("label");
+          label.textContent = "Nombre del " + etiqueta + " " + (caja.children.length + 1);
+          var input = document.createElement("input");
+          input.name = campo;
+          input.required = true;
+          label.appendChild(input);
+          caja.appendChild(label);
+        }
+      });
+    }
+    ajustarNombres("adultos", "nombres-adultos", "nombre_adulto", "adulto");
+    ajustarNombres("menores", "nombres-menores", "nombre_menor", "menor");
+
+    // Si se pasan del máximo, el aviso sale encima del botón y no se envía nada
+    (function () {
+      var form = document.querySelector(".formulario");
+      var aviso = document.getElementById("aviso-maximo");
+      function cabe() {
+        var total = (parseInt(form.adultos.value, 10) || 0) + (parseInt(form.menores.value, 10) || 0);
+        aviso.hidden = total <= MAXIMO;
+        return aviso.hidden;
+      }
+      form.adultos.addEventListener("input", cabe);
+      form.menores.addEventListener("input", cabe);
+      form.addEventListener("submit", function (evento) {
+        if (cabe()) return;
+        evento.preventDefault();
+        aviso.scrollIntoView({ block: "nearest" });   // no mueve nada si ya se ve
+      });
+      {% if errores or confirmar_repetida %}
+      // Venimos de un envío sin terminar: se vuelve a la zona del botón
+      document.getElementById("envio").scrollIntoView({ block: "center" });
+      {% endif %}
+      {% if confirmar_repetida %}
+      var popup = document.getElementById("popup-repetida");
+      popup.close();        // viene abierto por si el navegador no tiene JavaScript
+      popup.showModal();
+      document.getElementById("popup-cancelar").addEventListener("click", function () { popup.close(); });
+      {% endif %}
+    })();
+
+    // Adultos y Menores se cambian solo con los botones − y +, no escribiendo
+    document.querySelectorAll(".contador").forEach(function (contador) {
+      var numero = contador.querySelector("input");
+      var menos = contador.querySelector("[data-paso='-1']");
+      var mas = contador.querySelector("[data-paso='1']");
+      numero.readOnly = true;
+      function poner(n) {
+        n = Math.min(Math.max(n, 1), MAXIMO - 1);
+        menos.disabled = n <= 1;
+        mas.disabled = n >= MAXIMO - 1;
+        if (String(n) === numero.value) return;
+        numero.value = n;
+        numero.dispatchEvent(new Event("input"));   // actualiza los recuadros de nombres y el aviso
+      }
+      [menos, mas].forEach(function (boton) {
+        boton.addEventListener("click", function () {
+          poner((parseInt(numero.value, 10) || 1) + Number(boton.dataset.paso));
+        });
+      });
+      poner(parseInt(numero.value, 10) || 1);
+    });
+
+    // El primer adulto suele ser quien reserva: se copia solo hasta que lo cambien a mano
+    (function () {
+      var form = document.querySelector(".formulario");
+      var primero = document.querySelector("#nombres-adultos input");
+      var campos = [form.nombre, form.primer_apellido, form.segundo_apellido];
+      function titular() {
+        return campos.map(function (c) { return c.value.trim(); }).filter(Boolean).join(" ");
+      }
+      var copiar = primero.value === "" || primero.value === titular();
+      primero.addEventListener("input", function () { copiar = false; });
+      campos.forEach(function (campo) {
+        campo.addEventListener("input", function () {
+          if (copiar) primero.value = titular();
+        });
+      });
+    })();
+  </script>
 {% endif %}
 {% endblock %}
